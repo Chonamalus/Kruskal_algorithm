@@ -1,63 +1,65 @@
+import numpy as np
 import random
 import raylib
 
-'''
-IMPROVEMENT :
-Must take care of the fact that there are double in the neighbors list, ex for a 7x7:
-[(0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (4, 1), (5, 1), !(6, 1), (6, 0), !(6, 1), (6, 2), (6, 3), (6, 4), (5, 4), (5, 3), (5, 2), (4, 2), (3, 2), (2, 2), (2, 1), (2, 2), (1, 2), (1, 3), (0, 3), (0, 4), (1, 4), (2, 4), (2, 5), (2, 6), (3, 6), (3, 5), (3, 4), (4, 4), (4, 5), (5, 5), (5, 6), (5, 5), (6, 5), (4, 5), (4, 4), (4, 3), (3, 3), (3, 6), (2, 6), (1, 6), (0, 6), (0, 5), (1, 6), (2, 5)]
-Sometimes it backtracks and keep the old ones, that must have been deleted => found a way to burn them
-'''
 
 # Class of the underground (no-graphic) maze logic of generation
 class MazeGenerator:
     def __init__(self, width_nbrCells, height_nbrCells):
         self.width_nbrCells = width_nbrCells
         self.height_nbrCells = height_nbrCells
-        self.visited_cells = []
-        self.current_position = (0,0)
-        self.previous_position = None
+        self.visited_cells = np.full((height_nbrCells,width_nbrCells), False, dtype=bool)
+        self.path_taken = []
+        self.current_cell = (0,0)
+        self.previous_cell = None
     
-    def generate_step(self):
-        def is_valid(x, y): # check wether the case is unvisited and inside the window
+    def generate_step(self): 
+        def is_valid(cell): # check wether the case is unvisited and inside the window
+            (x,y) = cell
             is_insideWinX = x>=0 and x<self.width_nbrCells
             is_insideWinY = y>=0 and y<self.height_nbrCells
-            if not self.visited_cells: # no cell visited at all yet
-                return is_insideWinX and is_insideWinY
+            if is_insideWinX and is_insideWinY:
+                is_cellFree = not self.visited_cells[cell]
+                return is_cellFree
             else:
-                is_unvisited = not (x,y) in self.visited_cells
-                return is_insideWinX and is_insideWinY and is_unvisited
+                return False
 
-        def choose_neighbor(position_couple): # choose a random availible cell
-            (x,y) = position_couple
+        def choose_neighbor(cell): # choose a random availible cell
+            (x,y) = cell
             neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
-            neighbors = [(nx,ny) for (nx,ny) in neighbors if is_valid(nx,ny)]
+            neighbors = [n_cell for n_cell in neighbors if is_valid(n_cell)]
+            print("Neighbors:", neighbors)
             return random.choice(neighbors) if len(neighbors)!=0 else None
         
         # Update the attribute of the maze
-        thereIsNoNeighbors = (choose_neighbor(self.current_position) == None)
-        print("---", thereIsNoNeighbors)
+        theChosenCell = choose_neighbor(self.current_cell)
+        print("-> theChosenCell =", theChosenCell)
 
-        if thereIsNoNeighbors: # current_pos becomes previous_pos in visited_cells
-            print("[NO NEIGHBORS]", self.current_position, self.previous_position)
-            index_prevPosition = self.visited_cells.index(self.previous_position)
-            self.previous_position = self.current_position
-            self.current_position = self.visited_cells[index_prevPosition -1]
-            
-        else:   # current_pos becomes the new free cell
-            self.previous_position = self.current_position
-            self.visited_cells.append(self.current_position)
-            self.current_position = choose_neighbor(self.current_position)
-            print("[WHERE AM I]", self.current_position, self.previous_position)
+        if theChosenCell != None:
+            # Set the path_taken and visited_cells
+            self.path_taken.append(self.current_cell)
+            self.visited_cells[self.current_cell] = True
+            # Obtain the new path
+            self.previous_cell = self.current_cell
+            self.current_cell = theChosenCell
+            print(self.visited_cells)
+            print("==> :) CurPrev Cells:", self.current_cell, self.previous_cell)
+            print("==> path_taken:", self.path_taken, "\n")
+        else:
+            self.previous_cell = self.current_cell
+            self.current_cell = self.path_taken.pop()
+            print("==> :( CurPrev Cells:", self.current_cell, self.previous_cell)
+            print("==> path_taken:", self.path_taken, "\n")
 
     def is_complete(self):
-        return len(self.visited_cells) == self.width_nbrCells*self.height_nbrCells
+        return len(self.path_taken) == self.width_nbrCells*self.height_nbrCells
 
 
 # Draw the graphics of the maze. Outside of the MazeGenerator class
-def draw_maze(current_pos, previous_pos, cell_size, wall_thickness):
+def draw_maze(current_cell, previous_cell, cell_size, wall_thickness):
 
-    (x_current, y_current) = current_pos
-    (x_previous, y_previous) = previous_pos if previous_pos!=None else current_pos
+    (x_current, y_current) = current_cell
+    (x_previous, y_previous) = previous_cell if previous_cell!=None else current_cell
     
     raylib.DrawRectangle(   # Draw the previous cell
         x_previous*cell_size+wall_thickness,
@@ -107,14 +109,47 @@ if __name__ == "__main__":
                 if maze.is_complete():
                     generation_complete = True
                     print("Maze is completed !!!")
-                    print('Visited:',maze.visited_cells)
+                    print('Visited:', maze.visited_cells)
         draw_maze(
-            maze.current_position, 
-            maze.previous_position, 
+            maze.current_cell, 
+            maze.previous_cell, 
             cell_size, 
             wall_thickness)
  
         raylib.EndDrawing()
 
     raylib.CloseWindow()
- 
+
+
+'''
+Première erreur: le List de List non-mutable!! 
+Qui remplaçait toute une colone au lieu de changer juste la cell!!!
+[[ True  True  True False False False False]
+ [ True  True  True False False False False]
+ [ True  True  True False False False False]
+ [ True  True  True False False False False]
+ [ True  True  True False False False False]
+ [ True  True  True False False False False]
+ [ True  True  True False False False False]]
+
+Solution : remplacer par un numpy array, qui est mieux fait
+'''
+
+'''
+Seconde erreur: on reste enfermé lors d'un backtrack trop poussé
+Neighbors: []
+-> theChosenCell = None
+==> :( CurPrev Cells: (4, 0) (4, 1)
+
+Neighbors: [(4, 1)]
+-> theChosenCell = (4, 1)
+==> :) CurPrev Cells: (4, 1) (4, 0)
+
+Neighbors: []
+-> theChosenCell = None
+==> :( CurPrev Cells: (4, 0) (4, 1)
+
+Neighbors: [(4, 1)]
+-> theChosenCell = (4, 1)
+==> :) CurPrev Cells: (4, 1) (4, 0)
+'''
