@@ -61,27 +61,34 @@ def draw_maze(current_cell, previous_cell, cell_size, wall_thickness):
 
     (x_current, y_current) = current_cell
     (x_previous, y_previous) = previous_cell if previous_cell!=None else current_cell
+
+    centerXPrevious = x_previous*cell_size+wall_thickness
+    centerYPrevious = y_previous*cell_size+wall_thickness
+    centerXCurrent = x_current*cell_size+wall_thickness
+    centerYCurrent = y_current*cell_size+wall_thickness
+
+    thicknessXTrace = abs(y_current-y_previous)*(cell_size-2*wall_thickness) + abs(x_current-x_previous)*2*wall_thickness
+    thicknessYTrace = abs(x_current-x_previous)*(cell_size-2*wall_thickness) + abs(y_current-y_previous)*2*wall_thickness
+    centerXTrace = (centerXPrevious+centerXCurrent+cell_size-2*wall_thickness-thicknessXTrace)//2
+    centerYTrace = (centerYPrevious+centerYCurrent+cell_size-2*wall_thickness-thicknessYTrace)//2
     
     raylib.DrawRectangle(   # Draw the previous cell
-        x_previous*cell_size+wall_thickness,
-        y_previous*cell_size+wall_thickness,
+        centerXPrevious,
+        centerYPrevious,
         cell_size-2*wall_thickness,
         cell_size-2*wall_thickness,
         raylib.DARKPURPLE)
-    
-    centerX = max(x_current,x_previous)*cell_size
-    centerY = max(y_current,y_previous)*cell_size
 
     raylib.DrawRectangle(   # Draw the junction between both cells
-        centerX -wall_thickness,
-        centerY -wall_thickness,
-        2*wall_thickness,
-        2*wall_thickness,
-        raylib. WHITE)
+        centerXTrace,
+        centerYTrace,
+        thicknessXTrace,
+        thicknessYTrace,
+        raylib.DARKPURPLE)
     
     raylib.DrawRectangle(   # Draw the current cell
-        x_current*cell_size+wall_thickness,
-        y_current*cell_size+wall_thickness,
+        centerXCurrent,
+        centerYCurrent,
         cell_size-2*wall_thickness,
         cell_size-2*wall_thickness,
         raylib.LIME)
@@ -89,8 +96,8 @@ def draw_maze(current_cell, previous_cell, cell_size, wall_thickness):
 
 # This is the main function
 if __name__ == "__main__":
-    width_nbrCells = 10 
-    height_nbrCells = 5
+    width_nbrCells = 15 
+    height_nbrCells = 10
     maze = MazeGenerator(width_nbrCells, height_nbrCells)
 
     window_title = "Maze Generator" 
@@ -161,6 +168,9 @@ Solution: on backtrack en utilisant la previous cell, lors du test de validité,
 
 '''
 Troisième erreur: le dessin de la trace derrière les nouvelles cells
+
 Le dessin n'était jamais bien placé et j'ai eu beaucoup de mal à le faire.
-Solution: la fonction drawRectangle ne met pas le centre aux deux premières variables, mais le coin haut-gauche
+Il a été fastidieux de trouver la solution, j'ai du revenir aux bases, faire des schémas, ..., le faire par dichotomie, et recherche longue, mais j'y suis arrivé
+
+Solution: La fonction drawRectangle ne met pas le centre aux deux premières variables, mais le coin haut-gauche.
 '''
