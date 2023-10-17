@@ -36,7 +36,7 @@ class MazeGenerator:
         theChosenCell = choose_neighbor(self.current_cell)
         print("-> theChosenCell =", theChosenCell)
 
-        if theChosenCell != None:
+        if theChosenCell != None: # Build the maze
             # Set the path_taken and visited_cells
             self.path_taken.append(self.current_cell)
             self.visited_cells[self.current_cell] = True
@@ -45,7 +45,7 @@ class MazeGenerator:
             self.current_cell = theChosenCell
             print("==> :) CurPrev Cells:", self.current_cell, self.previous_cell)
             print("==> path_taken:", self.path_taken, "\n")
-        else:
+        else:                      # Backtrack the maze
             self.visited_cells[self.current_cell] = True
             self.previous_cell = self.current_cell
             self.current_cell = self.path_taken.pop()
@@ -129,48 +129,3 @@ if __name__ == "__main__":
         raylib.EndDrawing()
 
     raylib.CloseWindow()
-
-
-'''
-Première erreur: le List de List non-mutable!! 
-Qui remplaçait toute une colone au lieu de changer juste la cell!!!
-[[ True  True  True False False False False]
- [ True  True  True False False False False]
- [ True  True  True False False False False]
- [ True  True  True False False False False]
- [ True  True  True False False False False]
- [ True  True  True False False False False]
- [ True  True  True False False False False]]
-
-Solution : remplacer par un numpy array, qui est mieux fait
-'''
-
-'''
-Seconde erreur: on reste enfermé lors d'un backtrack trop poussé
-Neighbors: []
--> theChosenCell = None
-==> :( CurPrev Cells: (4, 0) (4, 1)
-
-Neighbors: [(4, 1)]
--> theChosenCell = (4, 1)
-==> :) CurPrev Cells: (4, 1) (4, 0)
-
-Neighbors: []
--> theChosenCell = None
-==> :( CurPrev Cells: (4, 0) (4, 1)
-
-Neighbors: [(4, 1)]
--> theChosenCell = (4, 1)
-==> :) CurPrev Cells: (4, 1) (4, 0)
-
-Solution: on backtrack en utilisant la previous cell, lors du test de validité, il faut que les cells qu'on choisit soient différentes de la previous, comme ça on ne retouche pas à celle qu'on a pris juste avant !! Et pas de prise de mémoire trop grande, si le labirhynte est infini
-'''
-
-'''
-Troisième erreur: le dessin de la trace derrière les nouvelles cells
-
-Le dessin n'était jamais bien placé et j'ai eu beaucoup de mal à le faire.
-Il a été fastidieux de trouver la solution, j'ai du revenir aux bases, faire des schémas, ..., le faire par dichotomie, et recherche longue, mais j'y suis arrivé
-
-Solution: La fonction drawRectangle ne met pas le centre aux deux premières variables, mais le coin haut-gauche.
-'''
