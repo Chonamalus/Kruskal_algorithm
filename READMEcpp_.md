@@ -1,0 +1,7 @@
+- heritage
+- class virtual pure
+- composition
+- agrégation
+- polymorphisme
+- intération avec des fichiers (register labyrinthe)
+- entrée utilisateur (jeu) keyboard
