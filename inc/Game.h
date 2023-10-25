@@ -1,4 +1,5 @@
 #pragma once
+#include "parameters.h"
 #include <fstream>
 #include <iostream>
 #include <raylib.h>
@@ -12,11 +13,11 @@ class Game {
 
   private:
     // Windows parameters
-    const int screenWidth = 800;
-    const int screenHeight = 600;
-    const char *screenTitle = "My first RAYLIB program!";
-    const int FPS = 60;
-    const Color initBackground = BLACK;
+    static const int screenWidth;
+    static const int screenHeight;
+    static const char *screenTitle;
+    static const int FPS;
+    static const Color initBackground;
 
   private:
     static const bool shutMyRaylib = true;
